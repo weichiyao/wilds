@@ -36,7 +36,10 @@ class ERM(SingleModelAlgorithm):
                 - unlabeled_y_pred (Tensor): predictions for unlabeled batch for fully-supervised ERM experiments
                 - unlabeled_y_true (Tensor): true labels for unlabeled batch for fully-supervised ERM experiments
         """
-        x, y_true, metadata = batch
+        if len(batch) == 3:
+            x, y_true, metadata = batch
+        else: # here igore the oracle labels created for "noise injection"
+            x, y_true, metadata, _ = batch
         x = move_to(x, self.device)
         y_true = move_to(y_true, self.device)
         g = move_to(self.grouper.metadata_to_group(metadata), self.device)
