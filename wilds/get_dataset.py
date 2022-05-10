@@ -38,6 +38,13 @@ def get_dataset(dataset: str, version: Optional[str] = None, unlabeled: bool = F
         else:
             from wilds.datasets.camelyon17_dataset import Camelyon17Dataset
             return Camelyon17Dataset(version=version, **dataset_kwargs)
+        
+    elif dataset == 'camelyon17_noisy':
+        if unlabeled:
+            raise ValueError('Not implemented')
+        else:
+            from wilds.datasets.camelyon17_dataset_noisy import Camelyon17DatasetNoisy
+            return Camelyon17DatasetNoisy(version=version, **dataset_kwargs)
 
     elif dataset == 'celebA':
         from wilds.datasets.celebA_dataset import CelebADataset
@@ -69,6 +76,16 @@ def get_dataset(dataset: str, version: Optional[str] = None, unlabeled: bool = F
             else:
                 from wilds.datasets.iwildcam_dataset import IWildCamDataset # type:ignore
             return IWildCamDataset(version=version, **dataset_kwargs)
+        
+    elif dataset == 'iwildcam_noisy':
+        if unlabeled:
+            raise ValueError('not implemented')
+        else:
+            if version == '1.0':
+                raise ValueError('not implemented')
+            else:
+                from wilds.datasets.iwildcam_dataset_noisy import IWildCamDatasetNoisy # type:ignore
+            return IWildCamDatasetNoisy(version=version, **dataset_kwargs)
 
     elif dataset == 'waterbirds':
         from wilds.datasets.waterbirds_dataset import WaterbirdsDataset
@@ -135,7 +152,11 @@ def get_dataset(dataset: str, version: Optional[str] = None, unlabeled: bool = F
     elif dataset == 'rxrx1':
         from wilds.datasets.rxrx1_dataset import RxRx1Dataset
         return RxRx1Dataset(version=version, **dataset_kwargs)
-
+    
+    elif dataset == 'rxrx1_noisy':
+        from wilds.datasets.rxrx1_dataset_noisy import RxRx1DatasetNoisy
+        return RxRx1DatasetNoisy(version=version, **dataset_kwargs)
+    
     elif dataset == 'globalwheat':
         from wilds.datasets.globalwheat_dataset import GlobalWheatDataset
         return GlobalWheatDataset(version=version, **dataset_kwargs)
