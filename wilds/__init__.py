@@ -4,13 +4,16 @@ from .get_dataset import get_dataset
 benchmark_datasets = [
     'amazon',
     'camelyon17',
+    'camelyon17_noisy',
     'civilcomments',
     'iwildcam',
+    'iwildcam_noisy',
     'ogb-molpcba',
     'poverty',
     'fmow',
     'py150',
     'rxrx1',
+    'rxrx1_noisy',
     'globalwheat',
 ]
 
