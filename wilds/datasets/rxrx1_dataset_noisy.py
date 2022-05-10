@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 import torch
 
-from wilds.datasets.wilds_dataset_addnoise import WILDSDatasetNoisy, _flip_data
+from wilds.datasets.wilds_dataset_noisy import WILDSDatasetNoisy, _flip_data
 from wilds.common.grouper import CombinatorialGrouper
 from wilds.common.metrics.all_metrics import Accuracy
 
