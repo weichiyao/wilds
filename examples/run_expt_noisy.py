@@ -333,7 +333,8 @@ def main():
             dataset=full_dataset,
             groupby_fields=config.groupby_fields
         )
-
+    if config.unlabeled_split is None and unlabeled_dataset is None:
+        print("Not using unlabed dataset")
     # Configure labeled torch datasets (WILDS dataset splits)
     datasets = defaultdict(dict)
     for split in full_dataset.split_dict.keys():
