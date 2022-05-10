@@ -4,7 +4,7 @@ import time
 import torch
 import numpy as np
 
-class WILDSDataset:
+class WILDSDatasetNoisy:
     """
     Shared dataset class for all WILDS datasets.
     Each data point in the dataset is an (x, y, metadata) tuple, where:
@@ -522,3 +522,23 @@ class WILDSSubset(WILDSDataset):
 
     def eval(self, y_pred, y_true, metadata):
         return self.dataset.eval(y_pred, y_true, metadata)
+
+def _flip_data(label, noise_ratio, num_classes, seed):
+    """Flips label.
+    :param label
+    :param noise_ratio
+    :param num_classes
+    :param seed  
+    """
+    # Flip labels in noise.
+    num = len(label) 
+    num_noise = int(num * noise_ratio)
+    rnd = np.random.RandomState(seed + 1) 
+    
+    dtype = label.dtype
+    # Randomly pick samples to reassign labels.
+    to_flip = rnd.choice(len(label), size=num_noise, replace=False)
+    # Re-assign labels. (Not guarantee to be flipped)
+    label[to_flip] = rnd.choice(num_classes, size=num_noise, replace=True).astype(dtype)
+    
+    return label 
