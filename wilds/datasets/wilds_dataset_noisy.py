@@ -31,8 +31,9 @@ class WILDSDatasetNoisy:
         # since different subsets (e.g., train vs test) might have different transforms
         x = self.get_input(idx)
         y = self.y_array[idx]
+        y_orc = self.y_array_orc[idx]
         metadata = self.metadata_array[idx]
-        return x, y, metadata
+        return x, y, metadata, y_orc
 
     def get_input(self, idx):
         """
@@ -101,7 +102,7 @@ class WILDSDatasetNoisy:
         """
         required_attrs = ['_dataset_name', '_data_dir',
                           '_split_scheme', '_split_array',
-                          '_y_array', '_y_size',
+                          '_y_array', '_y_size', 
                           '_metadata_fields', '_metadata_array']
         for attr_name in required_attrs:
             assert hasattr(self, attr_name), f'WILDSDataset is missing {attr_name}.'
@@ -117,11 +118,11 @@ class WILDSDatasetNoisy:
         assert 'val' in self.split_dict
 
         # Check the form of the required arrays
-        assert (isinstance(self.y_array, torch.Tensor) or isinstance(self.y_array, list))
+        assert (isinstance(self.y_array, torch.Tensor) or isinstance(self.y_array, list)) 
         assert isinstance(self.metadata_array, torch.Tensor), 'metadata_array must be a torch.Tensor'
 
         # Check that dimensions match
-        assert len(self.y_array) == len(self.metadata_array)
+        assert len(self.y_array) == len(self.metadata_array) 
         assert len(self.split_array) == len(self.metadata_array)
 
         # Check metadata
@@ -243,10 +244,19 @@ class WILDSDatasetNoisy:
     def y_array(self):
         """
         A Tensor of targets (e.g., labels for classification tasks),
-        with y_array[i] representing the target of the i-th data point.
+        with y_array[i] representing the (noisy) target of the i-th data point.
         y_array[i] can contain multiple elements.
         """
         return self._y_array
+    
+    @property
+    def y_array_orc(self):
+        """
+        A Tensor of targets (e.g., labels for classification tasks),
+        with y_array_orc[i] representing the true target of the i-th data point.
+        y_array_orc[i] can contain multiple elements.
+        """
+        return self._y_array_orc
 
     @property
     def y_size(self):
@@ -468,7 +478,7 @@ class WILDSDatasetNoisy:
         return results, results_str
 
 
-class WILDSSubset(WILDSDataset):
+class WILDSSubsetNoisy(WILDSDatasetNoisy):
     def __init__(self, dataset, indices, transform, do_transform_y=False, noise_ratio=0.1):
         """
         This acts like `torch.utils.data.Subset`, but on `WILDSDatasets`.
@@ -483,7 +493,7 @@ class WILDSSubset(WILDSDataset):
         self.indices = indices
         inherited_attrs = ['_dataset_name', '_data_dir', '_collate',
                            '_split_scheme', '_split_dict', '_split_names',
-                           '_y_size', '_n_classes',
+                           '_y_size', '_n_classes', 
                            '_metadata_fields', '_metadata_map']
         for attr_name in inherited_attrs:
             if hasattr(dataset, attr_name):
@@ -493,13 +503,13 @@ class WILDSSubset(WILDSDataset):
         self.noise_ratio = noise_ratio
 
     def __getitem__(self, idx):
-        x, y, y_orc, metadata, = self.dataset[self.indices[idx]]
+        x, y, metadata, y_orc = self.dataset[self.indices[idx]]
         if self.transform is not None:
             if self.do_transform_y:
                 x, y, y_orc = self.transform(x, y, y_orc)
             else:
                 x = self.transform(x)
-        return x, y, y_orc, metadata
+        return x, y, metadata, y_orc
 
     def __len__(self):
         return len(self.indices)
