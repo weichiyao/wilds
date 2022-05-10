@@ -78,7 +78,7 @@ class WILDSDatasetNoisy:
             num_to_retain = int(np.round(float(len(split_idx)) * frac))
             split_idx = np.sort(np.random.permutation(split_idx)[:num_to_retain])
 
-        return WILDSSubset(self, split_idx, transform)
+        return WILDSSubsetNoisy(self, split_idx, transform)
 
     def _add_coarse_domain_metadata(self):
         """
@@ -214,7 +214,7 @@ class WILDSDatasetNoisy:
         e.g., {'train': 0, 'val': 1, 'test': 2}.
         Keys should match up with split_names.
         """
-        return getattr(self, '_split_dict', WILDSDataset.DEFAULT_SPLITS)
+        return getattr(self, '_split_dict', WILDSDatasetNoisy.DEFAULT_SPLITS)
 
     @property
     def split_names(self):
@@ -223,14 +223,14 @@ class WILDSDatasetNoisy:
         e.g., {'train': 'Train', 'val': 'Validation', 'test': 'Test'}.
         Keys should match up with split_dict.
         """
-        return getattr(self, '_split_names', WILDSDataset.DEFAULT_SPLIT_NAMES)
+        return getattr(self, '_split_names', WILDSDatasetNoisy.DEFAULT_SPLIT_NAMES)
 
     @property
     def source_domain_splits(self):
         """
         List of split IDs that are from the source domain.
         """
-        return getattr(self, '_source_domain_splits', WILDSDataset.DEFAULT_SOURCE_DOMAIN_SPLITS)
+        return getattr(self, '_source_domain_splits', WILDSDatasetNoisy.DEFAULT_SOURCE_DOMAIN_SPLITS)
 
     @property
     def split_array(self):
