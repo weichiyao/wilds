@@ -116,7 +116,7 @@ class CounterfactualTextDataset:
         'train': 'Train',
         'id_val': 'Validation (ID)',
         'id_test': 'Test',
-        'val' : 'Validation (OOD)'
+        'val' : 'Validation (OOD)',
         'test': 'Test (OOD)',
     }
     def __init__(self, datadict, transform):
