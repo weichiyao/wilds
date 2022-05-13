@@ -111,7 +111,7 @@ def organize_data(ds, create_id_val=False):
  
     return output
 
-class CftTextDataset:   
+class CounterfactualTextDataset:   
     DEFAULT_SPLIT_NAMES = {
         'train': 'Train',
         'id_val': 'Validation (ID)',
@@ -182,4 +182,4 @@ class CftTextDataset:
         e.g., {'train': 'Train', 'val': 'Validation', 'test': 'Test'}.
         Keys should match up with split_dict.
         """
-        return getattr(self, '_split_names', CtfTextDataset.DEFAULT_SPLIT_NAMES)
+        return getattr(self, '_split_names', CounterfactualTextDataset.DEFAULT_SPLIT_NAMES)
