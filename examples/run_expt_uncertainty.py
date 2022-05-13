@@ -17,6 +17,7 @@ import wilds
 from wilds.common.data_loaders import get_train_loader, get_eval_loader
 from wilds.common.grouper import CombinatorialGrouper
 from wilds.datasets.unlabeled.wilds_unlabeled_dataset import WILDSPseudolabeledSubset
+from wilds.datasets.counterfacturaltext_dataset import CounterfactualTextDataset, organize_data, load_data
 
 from utils import set_seed, Logger, BatchLogger, log_config, ParseKwargs, load, initialize_wandb, log_group_data, parse_bool, get_model_prefix, move_to
 from train import train, evaluate, infer_predictions
@@ -38,7 +39,7 @@ def main():
     parser = argparse.ArgumentParser()
 
     # Required arguments
-    parser.add_argument('-d', '--dataset', choices=wilds.supported_datasets, required=True)
+    parser.add_argument('-d', '--dataset', required=True) # , choices=wilds.supported_datasets)
     parser.add_argument('--algorithm', required=True, choices=supported.algorithms)
     parser.add_argument('--root_dir', required=True,
                         help='The directory where [dataset]/data can be found (or should be downloaded to, if it does not exist).')
@@ -209,192 +210,236 @@ def main():
 
     # Set random seed
     set_seed(config.seed)
-
+    
     # Data
-    full_dataset = wilds.get_dataset(
-        dataset=config.dataset,
-        version=config.version,
-        root_dir=config.root_dir,
-        download=config.download,
-        split_scheme=config.split_scheme,
-        noise_ratio=config.noise_ratio,
-        seed=config.seed,
-        **config.dataset_kwargs)
+    if config.dataset in ('kindle', 'imdb', 'imdb_sents'):
+        ds = load_data(config.root_dir, config.dataset)
+        datadict = organize_data(ds)  
+        transform = initialize_transform(config.transform, config, datadict, True)
+         
+        datasets = defaultdict(dict)
+        for split in datadict.keys():
+            if split=='train':
+                transform = train_transform
+                verbose = True
+            elif split == 'val':
+                transform = eval_transform
+                verbose = True
+            else:
+                transform = eval_transform
+                verbose = False
+            # Get subset
+            datasets[split]['dataset'] = CounterfactualTextDataset(datadict[split], transform)        
+            if split == 'train':
+                    datasets[split]['loader'] = get_train_loader(
+                        loader=config.train_loader,
+                        dataset=datasets[split]['dataset'],
+                        batch_size=config.batch_size,
+                        **config.loader_kwargs
+                    )        
+            else:
+                datasets[split]['loader'] = get_eval_loader(
+                    loader=config.eval_loader,
+                    dataset=datasets[split]['dataset'], 
+                    batch_size=config.batch_size,
+                    **config.loader_kwargs)    
 
-    # Transforms & data augmentations for labeled dataset
-    # To modify data augmentation, modify the following code block.
-    # If you want to use transforms that modify both `x` and `y`,
-    # set `do_transform_y` to True when initializing the `WILDSSubset` below.
-    train_transform = initialize_transform(
-        transform_name=config.transform,
-        config=config,
-        dataset=full_dataset,
-        additional_transform_name=config.additional_train_transform,
-        is_training=True)
-    eval_transform = initialize_transform(
-        transform_name=config.transform,
-        config=config,
-        dataset=full_dataset,
-        is_training=False)
-
-    # Configure unlabeled datasets
-    unlabeled_dataset = None
-    if config.unlabeled_split is not None:
-        split = config.unlabeled_split
-        full_unlabeled_dataset = wilds.get_dataset(
-            dataset=config.dataset,
-            version=config.unlabeled_version,
-            root_dir=config.root_dir,
-            download=config.download,
-            unlabeled=True,
-            **config.dataset_kwargs
-        )
-        train_grouper = CombinatorialGrouper(
-            dataset=[full_dataset, full_unlabeled_dataset],
-            groupby_fields=config.groupby_fields
-        )
-
-        # Transforms & data augmentations for unlabeled dataset
-        if config.algorithm == "FixMatch":
-            # For FixMatch, we need our loader to return batches in the form ((x_weak, x_strong), m)
-            # We do this by initializing a special transform function
-            unlabeled_train_transform = initialize_transform(
-                config.transform, config, full_dataset, is_training=True, additional_transform_name="fixmatch"
-            )
+    elif config.dataset in wilds.supported_datasets:
+        if 'noisy' in config.dataset: 
+            full_dataset = wilds.get_dataset(
+                dataset=config.dataset,
+                version=config.version,
+                root_dir=config.root_dir,
+                download=config.download,
+                split_scheme=config.split_scheme,
+                noise_ratio=config.noise_ratio,
+                seed=config.seed,
+                **config.dataset_kwargs)
         else:
-            # Otherwise, use the same data augmentations as the labeled data.
-            unlabeled_train_transform = train_transform
+            full_dataset = wilds.get_dataset(
+                dataset=config.dataset,
+                version=config.version,
+                root_dir=config.root_dir,
+                download=config.download,
+                split_scheme=config.split_scheme, 
+                **config.dataset_kwargs)
 
-        if config.algorithm == "NoisyStudent":
-            # For Noisy Student, we need to first generate pseudolabels using the teacher
-            # and then prep the unlabeled dataset to return these pseudolabels in __getitem__
-            print("Inferring teacher pseudolabels for Noisy Student")
-            assert config.teacher_model_path is not None
-            if not config.teacher_model_path.endswith(".pth"):
-                # Use the best model
-                config.teacher_model_path = os.path.join(
-                    config.teacher_model_path,  f"{config.dataset}_seed:{config.seed}_epoch:best_model.pth"
+        # Transforms & data augmentations for labeled dataset
+        # To modify data augmentation, modify the following code block.
+        # If you want to use transforms that modify both `x` and `y`,
+        # set `do_transform_y` to True when initializing the `WILDSSubset` below.
+        train_transform = initialize_transform(
+            transform_name=config.transform,
+            config=config,
+            dataset=full_dataset,
+            additional_transform_name=config.additional_train_transform,
+            is_training=True)
+        eval_transform = initialize_transform(
+            transform_name=config.transform,
+            config=config,
+            dataset=full_dataset,
+            is_training=False)
+
+        # Configure unlabeled datasets
+        unlabeled_dataset = None
+        if config.unlabeled_split is not None:
+            split = config.unlabeled_split
+            full_unlabeled_dataset = wilds.get_dataset(
+                dataset=config.dataset,
+                version=config.unlabeled_version,
+                root_dir=config.root_dir,
+                download=config.download,
+                unlabeled=True,
+                **config.dataset_kwargs
+            )
+            train_grouper = CombinatorialGrouper(
+                dataset=[full_dataset, full_unlabeled_dataset],
+                groupby_fields=config.groupby_fields
+            )
+
+            # Transforms & data augmentations for unlabeled dataset
+            if config.algorithm == "FixMatch":
+                # For FixMatch, we need our loader to return batches in the form ((x_weak, x_strong), m)
+                # We do this by initializing a special transform function
+                unlabeled_train_transform = initialize_transform(
+                    config.transform, config, full_dataset, is_training=True, additional_transform_name="fixmatch"
+                )
+            else:
+                # Otherwise, use the same data augmentations as the labeled data.
+                unlabeled_train_transform = train_transform
+
+            if config.algorithm == "NoisyStudent":
+                # For Noisy Student, we need to first generate pseudolabels using the teacher
+                # and then prep the unlabeled dataset to return these pseudolabels in __getitem__
+                print("Inferring teacher pseudolabels for Noisy Student")
+                assert config.teacher_model_path is not None
+                if not config.teacher_model_path.endswith(".pth"):
+                    # Use the best model
+                    config.teacher_model_path = os.path.join(
+                        config.teacher_model_path,  f"{config.dataset}_seed:{config.seed}_epoch:best_model.pth"
+                    )
+
+                d_out = infer_d_out(full_dataset, config)
+                teacher_model = initialize_model(config, d_out).to(config.device)
+                load(teacher_model, config.teacher_model_path, device=config.device)
+                # Infer teacher outputs on weakly augmented unlabeled examples in sequential order
+                weak_transform = initialize_transform(
+                    transform_name=config.transform,
+                    config=config,
+                    dataset=full_dataset,
+                    is_training=True,
+                    additional_transform_name="weak"
+                )
+                unlabeled_split_dataset = full_unlabeled_dataset.get_subset(split, transform=weak_transform, frac=config.frac)
+                sequential_loader = get_eval_loader(
+                    loader=config.eval_loader,
+                    dataset=unlabeled_split_dataset,
+                    grouper=train_grouper,
+                    batch_size=config.unlabeled_batch_size,
+                    **config.unlabeled_loader_kwargs
+                )
+                teacher_outputs = infer_predictions(teacher_model, sequential_loader, config)
+                teacher_outputs = move_to(teacher_outputs, torch.device("cpu"))
+                unlabeled_split_dataset = WILDSPseudolabeledSubset(
+                    reference_subset=unlabeled_split_dataset,
+                    pseudolabels=teacher_outputs,
+                    transform=unlabeled_train_transform,
+                    collate=full_dataset.collate,
+                )
+                teacher_model = teacher_model.to(torch.device("cpu"))
+                del teacher_model
+            else:
+                unlabeled_split_dataset = full_unlabeled_dataset.get_subset(
+                    split, 
+                    transform=unlabeled_train_transform, 
+                    frac=config.frac, 
+                    load_y=config.use_unlabeled_y
                 )
 
-            d_out = infer_d_out(full_dataset, config)
-            teacher_model = initialize_model(config, d_out).to(config.device)
-            load(teacher_model, config.teacher_model_path, device=config.device)
-            # Infer teacher outputs on weakly augmented unlabeled examples in sequential order
-            weak_transform = initialize_transform(
-                transform_name=config.transform,
-                config=config,
-                dataset=full_dataset,
-                is_training=True,
-                additional_transform_name="weak"
-            )
-            unlabeled_split_dataset = full_unlabeled_dataset.get_subset(split, transform=weak_transform, frac=config.frac)
-            sequential_loader = get_eval_loader(
-                loader=config.eval_loader,
-                dataset=unlabeled_split_dataset,
-                grouper=train_grouper,
-                batch_size=config.unlabeled_batch_size,
-                **config.unlabeled_loader_kwargs
-            )
-            teacher_outputs = infer_predictions(teacher_model, sequential_loader, config)
-            teacher_outputs = move_to(teacher_outputs, torch.device("cpu"))
-            unlabeled_split_dataset = WILDSPseudolabeledSubset(
-                reference_subset=unlabeled_split_dataset,
-                pseudolabels=teacher_outputs,
-                transform=unlabeled_train_transform,
-                collate=full_dataset.collate,
-            )
-            teacher_model = teacher_model.to(torch.device("cpu"))
-            del teacher_model
-        else:
-            unlabeled_split_dataset = full_unlabeled_dataset.get_subset(
-                split, 
-                transform=unlabeled_train_transform, 
-                frac=config.frac, 
-                load_y=config.use_unlabeled_y
-            )
-
-        unlabeled_dataset = {
-            'split': split,
-            'name': full_unlabeled_dataset.split_names[split],
-            'dataset': unlabeled_split_dataset
-        }
-        unlabeled_dataset['loader'] = get_train_loader(
-            loader=config.train_loader,
-            dataset=unlabeled_dataset['dataset'],
-            batch_size=config.unlabeled_batch_size,
-            uniform_over_groups=config.uniform_over_groups,
-            grouper=train_grouper,
-            distinct_groups=config.distinct_groups,
-            n_groups_per_batch=config.unlabeled_n_groups_per_batch,
-            **config.unlabeled_loader_kwargs
-        )
-    else:
-        train_grouper = CombinatorialGrouper(
-            dataset=full_dataset,
-            groupby_fields=config.groupby_fields
-        )
-    if config.unlabeled_split is None and unlabeled_dataset is None:
-        print("Not using unlabed dataset")
-    # Configure labeled torch datasets (WILDS dataset splits)
-    datasets = defaultdict(dict)
-    for split in full_dataset.split_dict.keys():
-        if split=='train':
-            transform = train_transform
-            verbose = True
-        elif split == 'val':
-            transform = eval_transform
-            verbose = True
-        else:
-            transform = eval_transform
-            verbose = False
-        # Get subset
-        datasets[split]['dataset'] = full_dataset.get_subset(
-            split,
-            frac=config.frac,
-            transform=transform)
-
-        if split == 'train':
-            datasets[split]['loader'] = get_train_loader(
+            unlabeled_dataset = {
+                'split': split,
+                'name': full_unlabeled_dataset.split_names[split],
+                'dataset': unlabeled_split_dataset
+            }
+            unlabeled_dataset['loader'] = get_train_loader(
                 loader=config.train_loader,
-                dataset=datasets[split]['dataset'],
-                batch_size=config.batch_size,
+                dataset=unlabeled_dataset['dataset'],
+                batch_size=config.unlabeled_batch_size,
                 uniform_over_groups=config.uniform_over_groups,
                 grouper=train_grouper,
                 distinct_groups=config.distinct_groups,
-                n_groups_per_batch=config.n_groups_per_batch,
-                **config.loader_kwargs)
+                n_groups_per_batch=config.unlabeled_n_groups_per_batch,
+                **config.unlabeled_loader_kwargs
+            )
         else:
-            datasets[split]['loader'] = get_eval_loader(
-                loader=config.eval_loader,
-                dataset=datasets[split]['dataset'],
-                grouper=train_grouper,
-                batch_size=config.batch_size,
-                **config.loader_kwargs)
+            train_grouper = CombinatorialGrouper(
+                dataset=full_dataset,
+                groupby_fields=config.groupby_fields
+            )
+        if config.unlabeled_split is None and unlabeled_dataset is None:
+            print("Not using unlabed dataset")
+        # Configure labeled torch datasets (WILDS dataset splits)
+        datasets = defaultdict(dict)
+        for split in full_dataset.split_dict.keys():
+            if split=='train':
+                transform = train_transform
+                verbose = True
+            elif split == 'val':
+                transform = eval_transform
+                verbose = True
+            else:
+                transform = eval_transform
+                verbose = False
+            # Get subset
+            datasets[split]['dataset'] = full_dataset.get_subset(
+                split,
+                frac=config.frac,
+                transform=transform)
 
-        # Set fields
-        datasets[split]['split'] = split
-        datasets[split]['name'] = full_dataset.split_names[split]
-        datasets[split]['verbose'] = verbose
+            if split == 'train':
+                datasets[split]['loader'] = get_train_loader(
+                    loader=config.train_loader,
+                    dataset=datasets[split]['dataset'],
+                    batch_size=config.batch_size,
+                    uniform_over_groups=config.uniform_over_groups,
+                    grouper=train_grouper,
+                    distinct_groups=config.distinct_groups,
+                    n_groups_per_batch=config.n_groups_per_batch,
+                    **config.loader_kwargs)
+            else:
+                datasets[split]['loader'] = get_eval_loader(
+                    loader=config.eval_loader,
+                    dataset=datasets[split]['dataset'],
+                    grouper=train_grouper,
+                    batch_size=config.batch_size,
+                    **config.loader_kwargs)
 
-        # Loggers
-        datasets[split]['eval_logger'] = BatchLogger(
-            os.path.join(config.log_dir, f'{split}_eval.csv'), mode=mode, use_wandb=config.use_wandb
-        )
-        datasets[split]['algo_logger'] = BatchLogger(
-            os.path.join(config.log_dir, f'{split}_algo.csv'), mode=mode, use_wandb=config.use_wandb
-        )
+            # Set fields
+            datasets[split]['split'] = split
+            datasets[split]['name'] = full_dataset.split_names[split]
+            datasets[split]['verbose'] = verbose
 
-    if config.use_wandb:
-        initialize_wandb(config)
+            # Loggers
+            datasets[split]['eval_logger'] = BatchLogger(
+                os.path.join(config.log_dir, f'{split}_eval.csv'), mode=mode, use_wandb=config.use_wandb
+            )
+            datasets[split]['algo_logger'] = BatchLogger(
+                os.path.join(config.log_dir, f'{split}_algo.csv'), mode=mode, use_wandb=config.use_wandb
+            )
+
+        if config.use_wandb:
+            initialize_wandb(config)
 
     # Logging dataset info
     # Show class breakdown if feasible
-    if config.no_group_logging and full_dataset.is_classification and full_dataset.y_size==1 and full_dataset.n_classes <= 10:
+    if config.dataset in ('kindle', 'imdb', 'imdb_sents'):
+        log_grouper = None 
+    elif config.no_group_logging and full_dataset.is_classification and full_dataset.y_size==1 and full_dataset.n_classes <= 10:
         log_grouper = CombinatorialGrouper(
             dataset=full_dataset,
             groupby_fields=['y'])
     elif config.no_group_logging:
-        log_grouper = None
+        log_grouper = None 
     else:
         log_grouper = train_grouper
     log_group_data(datasets, log_grouper, logger)
