@@ -219,14 +219,9 @@ def main():
          
         datasets = defaultdict(dict)
         for split in datadict.keys():
-            if split=='train':
-                transform = train_transform
+            if split=='train' or split == 'val': 
                 verbose = True
-            elif split == 'val':
-                transform = eval_transform
-                verbose = True
-            else:
-                transform = eval_transform
+            else: 
                 verbose = False
             # Get subset
             datasets[split]['dataset'] = CounterfactualTextDataset(datadict[split], transform)        
