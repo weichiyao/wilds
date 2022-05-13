@@ -111,7 +111,7 @@ def organize_data(ds, create_id_val=False):
  
     return output
 
-class CtfTextDataset:   
+class CftTextDataset:   
     DEFAULT_SPLIT_NAMES = {
         'train': 'Train',
         'id_val': 'Validation (ID)',
