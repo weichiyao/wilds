@@ -439,42 +439,43 @@ def main():
     } 
  
     for phase in list(full_dataset.split_dict.keys()):
-        # Iterate over data.
-        results = {'labels': [], 'label_orc': [], 'logits': [], 'features': []}
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        for minibatch in tqdm(datasets[phase]['loader'], desc=phase):
-            if len(minibatch) == 3:
-                inputs, labels, _ = minibatch 
-                results['labels'].append(labels.numpy())
-                results['labels_orc'].append(labels.numpy())
-            else:
-                inputs, labels, _, label_orc = minibatch
-                results['labels'].append(labels.numpy())
-                results['labels_orc'].append(label_orc.numpy())
-            inputs = inputs.to(device) 
-            if 'bert' in config.model:
-                outputs = model(inputs) 
-                pooled_output = outputs['hidden_states'][-1][:, 0]  # (bs, dim)
-                pooled_output = model.pre_classifier(pooled_output)  # (bs, dim)
-                features = nn.ReLU()(pooled_output)  # (bs, dim) 
-                # CHECK: outputs['logits'] == model.classifier(features) # (bs, num_labels) 
-                results['logits'].append(outputs['logits'].cpu().detach().numpy())
-                results['features'].append(features.cpu().detach().numpy())
-            elif config.model in ('resnet18', 'resnet34', 'resnet50', 'resnet101', 'wideresnet50'):
-                logits = model(inputs)  
-                results['logits'].append(logits.cpu().detach().numpy())
-                results['features'].append(activation['avgpool'].cpu().numpy()[:, :, 0, 0])
-            elif config.model == 'densenet121':
-                logits = model(inputs)  
-                results['logits'].append(logits.cpu().detach().numpy())
-                out = F.relu(activation['features'], inplace=True)
-                out = F.adaptive_avg_pool2d(out, (1, 1))
-                results['features'].append(torch.flatten(out, 1).cpu().numpy())
-        for k in results:
-            results[k] = np.concatenate(results[k], axis=0)
-        
-        savepathname = os.path.join(config.log_dir, '{}.npz'.format(savedict[phase]))
-        np.savez(savepathname, **results)
+        file_path = os.path.join(config.log_dir, '{}.npz'.format(savedict[phase]))
+        if not os.path.isfile(file_path):
+            # Iterate over data.
+            results = {'labels': [], 'labels_orc': [], 'logits': [], 'features': []}
+            device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+            for minibatch in tqdm(datasets[phase]['loader'], desc=phase):
+                if len(minibatch) == 3:
+                    inputs, labels, _ = minibatch 
+                    results['labels'].append(labels.numpy())
+                    results['labels_orc'].append(labels.numpy())
+                else:
+                    inputs, labels, _, labels_orc = minibatch
+                    results['labels'].append(labels.numpy())
+                    results['labels_orc'].append(labels_orc.numpy())
+                inputs = inputs.to(device) 
+                if 'bert' in config.model:
+                    outputs = model(inputs) 
+                    pooled_output = outputs['hidden_states'][-1][:, 0]  # (bs, dim)
+                    pooled_output = model.pre_classifier(pooled_output)  # (bs, dim)
+                    features = nn.ReLU()(pooled_output)  # (bs, dim) 
+                    # CHECK: outputs['logits'] == model.classifier(features) # (bs, num_labels) 
+                    results['logits'].append(outputs['logits'].cpu().detach().numpy())
+                    results['features'].append(features.cpu().detach().numpy())
+                elif config.model in ('resnet18', 'resnet34', 'resnet50', 'resnet101', 'wideresnet50'):
+                    logits = model(inputs)  
+                    results['logits'].append(logits.cpu().detach().numpy())
+                    results['features'].append(activation['avgpool'].cpu().numpy()[:, :, 0, 0])
+                elif config.model == 'densenet121':
+                    logits = model(inputs)  
+                    results['logits'].append(logits.cpu().detach().numpy())
+                    out = F.relu(activation['features'], inplace=True)
+                    out = F.adaptive_avg_pool2d(out, (1, 1))
+                    results['features'].append(torch.flatten(out, 1).cpu().numpy())
+            for k in results:
+                results[k] = np.concatenate(results[k], axis=0)
+                
+            np.savez(file_path, **results)
 
 if __name__=='__main__':
     main() 
