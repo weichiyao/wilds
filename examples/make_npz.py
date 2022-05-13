@@ -444,6 +444,7 @@ def main():
             if len(minibatch) == 3:
                 inputs, labels, _ = minibatch 
                 results['labels'].append(labels.numpy())
+                results['labels_orc'].append(labels.numpy())
             else:
                 inputs, labels, _, label_orc = minibatch
                 results['labels'].append(labels.numpy())
