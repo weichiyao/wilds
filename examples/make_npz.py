@@ -177,6 +177,7 @@ def main():
     parser.add_argument('--eval_epoch', default=None, type=int, help='If eval_only is set, then eval_epoch allows you to specify evaluating at a particular epoch. By default, it evaluates the best epoch by validation performance.')
 
     # Misc
+    parser.add_argument('--use_pth', type=str, default="best")
     parser.add_argument('--device', type=int, nargs='+', default=[0])
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--log_dir', default='./logs')
@@ -405,6 +406,7 @@ def main():
     assert full_dataset.n_classes == d_out
     
     # Load the pretrained weights
+    filename = "{}_seed:{}_epoch:{}_model.pth".format(config.dataset.split("_")[0], config.seed, config.use_pth)
     pretrained_model_path = os.path.join(config.log_dir, 'best_model.pth')
     pretrained_model_weights = torch.load(pretrained_model_path, map_location=config.device)['algorithm']
     pretrained_model_weights = OrderedDict([(k[6:], v) for k, v in pretrained_model_weights.items()])
