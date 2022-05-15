@@ -163,4 +163,4 @@ def get_dataset(dataset: str, version: Optional[str] = None, unlabeled: bool = F
     
     elif dataset in ('kindle', 'imdb', 'imdb_sents'):
         from wilds.datasets.counterfactualtext_dataset import CounterfactualTextDataset
-        return CounterfactualTextDataset(**dataset_kwargs)
+        return CounterfactualTextDataset(dataset_name=dataset, **dataset_kwargs)
