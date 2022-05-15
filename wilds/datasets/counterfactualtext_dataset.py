@@ -1,25 +1,3 @@
-import os 
-import io, time 
-from IPython.display import display
-
-import numpy as np
-import pandas as pd
-import torch
-import pickle, random, re
-from collections import Counter, defaultdict
-from PyDictionary import PyDictionary
-dictionary=PyDictionary()
-
-from wilds.common.metrics.all_metrics import Accuracy
-from wilds.common.grouper import CombinatorialGrouper
-
-class Counterfactual:
-    def __init__(self, df_train, df_test, moniker):
-        display(df_train.head(1))
-        self.moniker = moniker
-        self.train = df_train
-        self.test = df_test
-
 class CounterfactualTextDataset:   
     DEFAULT_SPLIT_NAMES = {
         'train': 'Train',
@@ -28,6 +6,7 @@ class CounterfactualTextDataset:
         'val' : 'Validation (OOD)',
         'test': 'Test (OOD)',
     }
+    
     DEFAULT_SPLITS = {
         'train': 0, 
         # 'id_val': 1,
@@ -35,14 +14,20 @@ class CounterfactualTextDataset:
         'id_test': 2, 
         'test': 3
     }
+    
     def __init__(self, root_dir, dataset_name, version=None, download=True,
                  split_scheme="official", split_dict=None, split_names=None):
         self._split_names = split_names
         self._split_dict = split_dict 
         self._data_dir = root_dir
         self._dataset_name = dataset_name
-        self._split_scheme = split_scheme
-
+        
+        if split_dict is None:
+            self.split_dict = CounterfactualTextDataset.DEFAULT_SPLITS 
+        if split_names is None:
+            self.split_names = CounterfactualTextDataset.DEFAULT_SPLITS 
+        self.split_scheme = split_scheme
+         
         # Load the dataset 
         ds = self.load_data(self.data_dir, self.dataset_name)
         datadict, self._split_array = self.organize_data(ds, self.split_dict)
@@ -98,7 +83,6 @@ class CounterfactualTextDataset:
             (used in split_array),
             e.g., {'train': 0, 'id_val': 1, 'val':2, 'id_test': 2, 'test':3}.
             Keys should match up with split_names.
-
         Returns:
         =================
         output: A dictionary contains 'text' and 'labels'
@@ -331,32 +315,6 @@ class CounterfactualTextDataset:
         By default returns None -> uses default torch collate.
         """
         return getattr(self, '_collate', None)
-
-    @property
-    def split_scheme(self):
-        """
-        A string identifier of how the split is constructed,
-        e.g., 'standard', 'mixed-to-test', 'user', etc.
-        """
-        return self._split_scheme
-
-    @property
-    def split_names(self):
-        """
-        A dictionary mapping splits to their pretty names,
-        e.g., {'train': 'Train', 'val': 'Validation', 'test': 'Test'}.
-        Keys should match up with split_dict.
-        """
-        return getattr(self, '_split_names', CounterfactualTextDataset.DEFAULT_SPLIT_NAMES)
-
-    @property
-    def split_dict(self):
-        """
-        A dictionary mapping splits to integer identifiers (used in split_array),
-        e.g., {'train': 0, 'val': 1, 'test': 2}.
-        Keys should match up with split_names.
-        """
-        return getattr(self, '_split_dict', CounterfactualTextDataset.DEFAULT_SPLITS)
 
     @property
     def split_array(self):
