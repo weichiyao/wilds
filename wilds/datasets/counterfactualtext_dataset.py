@@ -52,7 +52,7 @@ def organize_data(ds, create_id_val=False):
         col = 'all_causal'
         ds.train['len_ct_text_'+col] = ds.train['ct_text_'+col].apply(lambda x: len(x.strip()))
         df_train_ct_text_flag = ds.train[ds.train['len_ct_text_'+col] > 0]
-        output['val'] = {'text':df_train_ct_text_flag['ct_text_'+col].values, 'label':df_train_ct_text_flag.ct_label.values}
+        output['val'] = {'text':df_train_ct_text_flag['ct_text_'+col].values, 'label':(df_train_ct_text_flag.ct_label.values == 1).astype(int)}
     
     if create_id_val: 
         if ds.moniker == "imdb": 
