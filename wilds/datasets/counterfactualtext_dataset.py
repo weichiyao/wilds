@@ -51,7 +51,7 @@ class CounterfactualTextDataset:
         if split_dict is None:
             self.split_dict = CounterfactualTextDataset.DEFAULT_SPLITS 
         if split_names is None:
-            self.split_names = CounterfactualTextDataset.DEFAULT_SPLITS 
+            self.split_names = CounterfactualTextDataset.DEFAULT_SPLIT_NAMES
         self.split_scheme = split_scheme
          
         # Load the dataset 
