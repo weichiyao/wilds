@@ -36,16 +36,16 @@ class CounterfactualTextDataset:
         'test': 3
     }
     def __init__(self, root_dir, dataset_name, version=None, download=True,
-                 split_scheme="official", splits_dict=None, split_names=None):
+                 split_scheme="official", split_dict=None, split_names=None):
         self._split_names = split_names
-        self._splits_dict = splits_dict 
+        self._split_dict = split_dict 
         self._data_dir = root_dir
         self._dataset_name = dataset_name
         self._split_scheme = split_scheme
 
         # Load the dataset 
-        ds = self.load_data(self._data_dir, self._dataset_name)
-        datadict, self._split_array = self.organize_data(ds, self._splits_dict)
+        ds = self.load_data(self.data_dir, self.dataset_name)
+        datadict, self._split_array = self.organize_data(ds, self.split_dict)
          
         self.text_array = list(datadict['text'])
         # Get the y values
@@ -86,11 +86,7 @@ class CounterfactualTextDataset:
         ds = pickle.load(open(load_path, "rb"))
         return ds
 
-    def organize_data(
-        self, 
-        ds, 
-        split_dict 
-    ):
+    def organize_data(self, ds, split_dict):
         """
         Organize data for easy use in the evaluation with split_names
         train, (id_val,) val, id_test, test 
