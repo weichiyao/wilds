@@ -441,6 +441,7 @@ dataset_defaults = {
         'process_outputs_function': 'multiclass_logits_to_pred',
     },
     'imdb': {
+        'split_scheme': 'official',
         'model': 'bert-base-uncased',
         'transform': 'bert',
         'max_token_length': 50,
@@ -460,6 +461,7 @@ dataset_defaults = {
         'scheduler_kwargs': {'num_warmup_steps': 5415}, 
     },
     'imdb_sents': {
+        'split_scheme': 'official',
         'model': 'bert-base-uncased',
         'transform': 'bert',
         'max_token_length': 50,
@@ -479,6 +481,7 @@ dataset_defaults = {
         'scheduler_kwargs': {'num_warmup_steps': 5415}, 
     },
     'kindle': {
+        'split_scheme': 'official',
         'model': 'bert-base-uncased',
         'transform': 'bert',
         'max_token_length': 512,
