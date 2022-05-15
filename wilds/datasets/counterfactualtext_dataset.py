@@ -1,3 +1,29 @@
+import os
+import time
+
+import torch
+import numpy as np
+ 
+import shutil
+import pandas as pd
+import torch
+from torch.utils.data import Dataset
+import pickle
+import numpy as np
+import torchvision.transforms.functional as F
+from torchvision import transforms 
+import datetime 
+from tqdm import tqdm 
+from wilds.common.metrics.all_metrics import Accuracy
+from wilds.common.grouper import CombinatorialGrouper
+
+class Counterfactual:
+    def __init__(self, df_train, df_test, moniker):
+        display(df_train.head(1))
+        self.moniker = moniker
+        self.train = df_train
+        self.test = df_test
+        
 class CounterfactualTextDataset:   
     DEFAULT_SPLIT_NAMES = {
         'train': 'Train',
