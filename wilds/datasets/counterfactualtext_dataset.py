@@ -35,7 +35,7 @@ class CounterfactualTextDataset:
         'id_test': 2, 
         'test': 3
     }
-    def __init__(self, data_dir, dataset_name, 
+    def __init__(self, root_dir, dataset_name, version=None, download=True,
                  split_scheme="official", splits_dict=None, split_names=None):
         self._split_names = split_names
         self._splits_dict = splits_dict 
