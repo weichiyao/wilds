@@ -129,7 +129,13 @@ class CounterfactualTextDataset:
         self.n_classes = 2
         self.is_classification = True
         self.collate = None
-        
+        self.metadata_array = self.y_array 
+        self.metadata_fields = ['y']
+        self.metadata_map = { 'y': ['negative', 'positive']}
+        self.eval_grouper = CombinatorialGrouper(
+            dataset=self,
+            groupby_fields=(['y'])
+        )
     def __len__(self):
         return len(self.y_array)
         
