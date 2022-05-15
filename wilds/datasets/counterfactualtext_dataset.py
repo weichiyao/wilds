@@ -140,7 +140,7 @@ class CounterfactualTextDataset:
         return len(self.y_array)
         
     def __getitem__(self, idx): 
-        return self.transform(self.get_input(idx)), self.y_array[idx]
+        return self.transform(self.get_input(idx)), self.y_array[idx], self.metadata_array[idx]
         
     def get_input(self, idx):
         return self.text_array[idx]
