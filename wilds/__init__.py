@@ -3,18 +3,21 @@ from .get_dataset import get_dataset
 
 benchmark_datasets = [
     'amazon',
-    'camelyon17',
-    'camelyon17_noisy',
+    'camelyon17', 
     'civilcomments',
-    'iwildcam',
-    'iwildcam_noisy',
+    'iwildcam', 
     'ogb-molpcba',
     'poverty',
     'fmow',
     'py150',
-    'rxrx1',
-    'rxrx1_noisy',
+    'rxrx1', 
     'globalwheat',
+]
+
+noisy_benchmark_datasets = [
+    'camelyon17_noisy',
+    'iwildcam_noisy',
+    'rxrx1_noisy',
 ]
 
 additional_datasets = [
@@ -27,7 +30,14 @@ additional_datasets = [
     'encode'
 ]
 
-supported_datasets = benchmark_datasets + additional_datasets
+counterfactual_text_datasets = [
+    'kindle', 
+    'imdb', 
+    'imdb_sents'
+]
+
+
+supported_datasets = benchmark_datasets + additional_datasets + noisy_benchmark_datasets + counterfactual_text_datasets
 
 unlabeled_datasets = [
     'amazon',
