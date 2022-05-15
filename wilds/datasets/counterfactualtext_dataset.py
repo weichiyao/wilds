@@ -11,7 +11,7 @@ from PyDictionary import PyDictionary
 dictionary=PyDictionary()
 
 from wilds.common.metrics.all_metrics import Accuracy
-
+from wilds.common.grouper import CombinatorialGrouper
 
 
 class Counterfactual:
@@ -129,7 +129,7 @@ class CounterfactualTextDataset:
         self.n_classes = 2
         self.is_classification = True
         self.collate = None
-        self.metadata_array = self.y_array 
+        self.metadata_array = self.y_array.reshape(-1,1) 
         self.metadata_fields = ['y']
         self.metadata_map = { 'y': ['negative', 'positive']}
         self.eval_grouper = CombinatorialGrouper(
