@@ -13,6 +13,13 @@ dictionary=PyDictionary()
 from wilds.common.metrics.all_metrics import Accuracy
 from wilds.common.grouper import CombinatorialGrouper
 
+class Counterfactual:
+    def __init__(self, df_train, df_test, moniker):
+        display(df_train.head(1))
+        self.moniker = moniker
+        self.train = df_train
+        self.test = df_test
+
 class CounterfactualTextDataset:   
     DEFAULT_SPLIT_NAMES = {
         'train': 'Train',
