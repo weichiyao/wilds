@@ -1,6 +1,6 @@
 from typing import Optional
 
-import wilds
+import wilds 
 
 def get_dataset(dataset: str, version: Optional[str] = None, unlabeled: bool = False, **dataset_kwargs):
     """
@@ -162,5 +162,5 @@ def get_dataset(dataset: str, version: Optional[str] = None, unlabeled: bool = F
         return GlobalWheatDataset(version=version, **dataset_kwargs)
     
     elif dataset in ('kindle', 'imdb', 'imdb_sents'):
-        from wilds.datasets.counterfactualtext_dataset import CounterfactualTextDataset
+        from wilds.datasets.counterfactualtext_dataset import Counterfactual, CounterfactualTextDataset
         return CounterfactualTextDataset(dataset_name=dataset, **dataset_kwargs)
