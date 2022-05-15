@@ -424,7 +424,7 @@ class CounterfactualTextDataset:
         """
         return getattr(self, '_metadata_map', None)
 
-class CounterfactualSubset(CounterfactualTextDataset):
+class CounterfactualTextSubset(CounterfactualTextDataset):
     def __init__(self, dataset, indices, transform, do_transform_y=False):
         """
         This acts like `torch.utils.data.Subset`, but on `CounterfactualTextDataset`.
