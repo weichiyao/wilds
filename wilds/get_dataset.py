@@ -160,3 +160,7 @@ def get_dataset(dataset: str, version: Optional[str] = None, unlabeled: bool = F
     elif dataset == 'globalwheat':
         from wilds.datasets.globalwheat_dataset import GlobalWheatDataset
         return GlobalWheatDataset(version=version, **dataset_kwargs)
+    
+    elif dataset in ('kindle', 'imdb', 'imdb_sents'):
+        from wilds.datasets.counterfactualtext_dataset imoprt CounterfactualTestDataset
+        return CounterfactualTestDataset(**dataset_kwargs)
