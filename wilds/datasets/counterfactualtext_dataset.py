@@ -474,5 +474,5 @@ class CounterfactualTextSubset(CounterfactualTextDataset):
     def metadata_array(self):
         return self.dataset._metadata_array[self.indices]
 
-    def eval(self, y_pred, y_true, metadata, prediction_fn):
-        return self.dataset.eval(y_pred, y_true, metadata, prediction_fn)
+    def eval(self, y_pred, y_true, metadata):
+        return self.dataset.eval(y_pred, y_true, metadata)
