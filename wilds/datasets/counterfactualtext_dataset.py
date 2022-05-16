@@ -205,7 +205,7 @@ class CounterfactualTextDataset:
             # Convert it to binary labels  
             label_cft = (ds.test_ct.label.values == 1).astype(int) 
             # Counterfactual  
-            output['text'].append(ds.test_ct_text.values)
+            output['text'].append(ds.test_ct.text.values)
             output['label'].append(label_cft)
         elif ds.moniker == 'kindle': 
             # Contert it to binary labels  
