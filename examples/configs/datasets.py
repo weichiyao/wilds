@@ -490,7 +490,7 @@ dataset_defaults = {
         'max_token_length': 512,
         'loss_function': 'cross_entropy',
         'algo_log_metric': 'accuracy',
-        'batch_size': 16,
+        'batch_size': 20,
         'lr': 1e-5,
         'weight_decay': 0,
         'n_epochs': 16,
