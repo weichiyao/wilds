@@ -493,7 +493,7 @@ dataset_defaults = {
         'batch_size': 16,
         'lr': 1e-5,
         'weight_decay': 0,
-        'n_epochs': 20,
+        'n_epochs': 16,
         'n_groups_per_batch': 2,
         'process_outputs_function': 'multiclass_logits_to_pred',
         'val_metric': 'acc_avg',
