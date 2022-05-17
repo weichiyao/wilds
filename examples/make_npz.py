@@ -78,6 +78,10 @@ def load_bert_based_model(config, d_out):
                 config.model,
                 num_labels=d_out,
                 **config.model_kwargs)
+    else:
+        raise ValueError(
+            "{} is not supported. Choices are 'distilbert-base-uncased' and 'bert-base-uncased'".format(config.model))
+        
     if config.model_kwargs['state_dict'] is not None:
         print(f'Initialized model with pretrained weights from {config.pretrained_model_path}')
         model.load_state_dict(config.model_kwargs['state_dict'] )
