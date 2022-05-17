@@ -435,7 +435,7 @@ def main():
     
     # Load the pretrained weights
     filename = "{}_seed:{}_epoch:{}_model.pth".format(config.dataset.split("_")[0], config.seed, config.use_pth)
-    pretrained_model_path = os.path.join(config.log_dir, 'best_model.pth')
+    pretrained_model_path = os.path.join(config.log_dir, filename)
     pretrained_model_weights = torch.load(pretrained_model_path, map_location=config.device)['algorithm']
     pretrained_model_weights = OrderedDict([(k[6:], v) for k, v in pretrained_model_weights.items()])
     if config.model in ('resnet18', 'resnet34', 'resnet50', 'resnet101', 'wideresnet50', 'densenet121'):
@@ -445,6 +445,9 @@ def main():
     elif 'bert' in config.model: 
         config.model_kwargs['state_dict'] = pretrained_model_weights
         model = load_bert_based_model(config, d_out)
+    else:
+        raise ValueError(
+            "{} is not supported. Current choices include bert-based or 'resnet18', 'resnet34', 'resnet50', 'resnet101', 'wideresnet50', 'densenet121'.".format(config.model))
     
     if torch.cuda.is_available():
         model.cuda()
