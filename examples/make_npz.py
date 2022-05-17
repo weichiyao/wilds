@@ -35,7 +35,7 @@ import torch.multiprocessing
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-from transformers import DistilBertForSequenceClassification, DistilBertModel
+from transformers import DistilBertForSequenceClassification, BertForSequenceClassification
 
 class DistilBertClassifier(DistilBertForSequenceClassification):
     def __init__(self, config):
@@ -49,12 +49,35 @@ class DistilBertClassifier(DistilBertForSequenceClassification):
         ) 
         return outputs
 
+class BertClassifier(BertForSequenceClassification):
+    def __init__(self, config):
+        super().__init__(config)
+        self.d_out = config.num_labels
+        
+    def __call__(self, x):
+        input_ids = x[:, :, 0]
+        attention_mask = x[:, :, 1]
+        token_type_ids = x[:, :, 2]
+        outputs = super().__call__(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            token_type_ids=token_type_ids
+        ) 
+        return outputs
+    
 def load_bert_based_model(config, d_out): 
     config.model_kwargs['output_hidden_states'] = True
-    model = DistilBertClassifier.from_pretrained(
-            config.model,
-            num_labels=d_out,
-            **config.model_kwargs)
+    if config.model == 'bert-base-uncased':
+        model = BertClassifier.from_pretrained(
+                config.model,
+                num_labels=d_out,
+                **config.model_kwargs)
+
+    elif config.model == 'distilbert-base-uncased':
+        model = DistilBertClassifier.from_pretrained(
+                config.model,
+                num_labels=d_out,
+                **config.model_kwargs)
     if config.model_kwargs['state_dict'] is not None:
         print(f'Initialized model with pretrained weights from {config.pretrained_model_path}')
         model.load_state_dict(config.model_kwargs['state_dict'] )
@@ -419,7 +442,7 @@ def main():
         model = load_bert_based_model(config, d_out)
     
     if torch.cuda.is_available():
-        model = model.cuda()
+        model.cuda()
     model.eval()
  
     if config.model in ('resnet18', 'resnet34', 'resnet50', 'resnet101', 'wideresnet50', 'densenet121'):
@@ -454,7 +477,7 @@ def main():
                     results['labels'].append(labels.numpy())
                     results['labels_orc'].append(labels_orc.numpy())
                 inputs = inputs.to(device) 
-                if 'bert' in config.model:
+                if config.model == 'distilbert-base-uncased':
                     outputs = model(inputs) 
                     pooled_output = outputs['hidden_states'][-1][:, 0]  # (bs, dim)
                     pooled_output = model.pre_classifier(pooled_output)  # (bs, dim)
@@ -462,6 +485,12 @@ def main():
                     # CHECK: outputs['logits'] == model.classifier(features) # (bs, num_labels) 
                     results['logits'].append(outputs['logits'].cpu().detach().numpy())
                     results['features'].append(features.cpu().detach().numpy())
+                elif config.model == 'bert-base-uncased':
+                    outputs = model(inputs) 
+                    features = model.bert.pooler(outputs['hidden_states'][-1])  # (bs, dim)
+                    # CHECK: outputs['logits'] == model.classifier(features) # (bs, num_labels)
+                    results['features'].append(features.cpu().detach().numpy())
+                    results['logits'].append(outputs['logits'].cpu().detach().numpy())
                 elif config.model in ('resnet18', 'resnet34', 'resnet50', 'resnet101', 'wideresnet50'):
                     logits = model(inputs)  
                     results['logits'].append(logits.cpu().detach().numpy())
