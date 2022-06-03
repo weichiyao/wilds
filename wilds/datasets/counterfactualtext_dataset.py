@@ -37,8 +37,8 @@ class CounterfactualTextDataset:
         'train': 0, 
         'val': 1,
         'val_ood': 2, 
-        'test': 2, 
-        'test_ood': 3
+        'test': 3, 
+        'test_ood': 4
     }
     
     def __init__(self, root_dir, dataset_name, version=None, download=True,
