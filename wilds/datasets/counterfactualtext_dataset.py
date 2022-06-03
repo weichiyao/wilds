@@ -27,18 +27,18 @@ class Counterfactual:
 class CounterfactualTextDataset:   
     DEFAULT_SPLIT_NAMES = {
         'train': 'Train',
-        # 'id_val': 'Validation (ID)',
-        'id_test': 'Test',
-        'val' : 'Validation (OOD)',
-        'test': 'Test (OOD)',
+        'val': 'Validation (ID)',
+        'test': 'Test (ID)',
+        'val_ood' : 'Validation (OOD)',
+        'test_ood': 'Test (OOD)',
     }
     
     DEFAULT_SPLITS = {
         'train': 0, 
-        # 'id_val': 1,
-        'val': 2, 
-        'id_test': 2, 
-        'test': 3
+        'val': 1,
+        'val_ood': 2, 
+        'test': 2, 
+        'test_ood': 3
     }
     
     def __init__(self, root_dir, dataset_name, version=None, download=True,
@@ -107,7 +107,7 @@ class CounterfactualTextDataset:
         ds: A dataset from the class Counterfactual 
         split_dict: A dictionary mapping splits to integer identifiers 
             (used in split_array),
-            e.g., {'train': 0, 'id_val': 1, 'val':2, 'id_test': 2, 'test':3}.
+            e.g., {'train': 0, 'val': 1, 'val_ood':2, 'test': 2, 'test_ood':3}.
             Keys should match up with split_names.
         Returns:
         =================
@@ -148,19 +148,10 @@ class CounterfactualTextDataset:
         
         ## 'train' ('id_val'): Train (and Validation (ID)) set -- Original  
         ds.train['label'] = (ds.train.label.values == 1).astype(int)
-        if 'id_val' in split_dict: 
-            if ds.moniker == "imdb": 
-                n_classes = 2
-                # number of samples for validation data
-                num_val = 500
-            elif ds.moniker == "imdb_sents": 
-                n_classes = 2
-                # number of samples for validation data
-                num_val = 1000
-            elif ds.moniker == 'kindle':
-                n_classes = 2
-                # number of samples for validation data
-                num_val = 1000 
+        if 'val' in split_dict: 
+            n_classes = 2
+            # number of samples for validation data
+            num_val = 1000 
             
             uniqueLabel = np.unique(ds.train.label.values)    
             smpID = []
@@ -175,7 +166,7 @@ class CounterfactualTextDataset:
             output['label'].append(val_data.label.values)
             # updata split_array
             num = len(output['label'][-1])
-            split_array.append(split_dict['id_val']*np.ones(num,dtype=int)) 
+            split_array.append(split_dict['val']*np.ones(num,dtype=int)) 
             # set the remaining to be training data 
             train_data = ds.train.iloc[~valID]
         else:
@@ -193,7 +184,7 @@ class CounterfactualTextDataset:
         output['label'].append((ds.test.label.values == 1).astype(int))
         # updata split_array
         num = len(output['label'][-1])
-        split_array.append(split_dict['id_test']*np.ones(num,dtype=int))
+        split_array.append(split_dict['test']*np.ones(num,dtype=int))
 
         ## 'test': Test OOD set -- Counterfactual 
         if ds.moniker == 'imdb':
@@ -214,7 +205,7 @@ class CounterfactualTextDataset:
             output['text'].append(ds.test.ct_text_amt.values)
             output['label'].append(label_cft) 
         num = len(output['label'][-1])
-        split_array.append(split_dict['test']*np.ones(num,dtype=int))
+        split_array.append(split_dict['test_ood']*np.ones(num,dtype=int))
         
         output['text'] = np.concatenate(output['text'], axis=0)
         output['label'] = np.concatenate(output['label'], axis=0)
