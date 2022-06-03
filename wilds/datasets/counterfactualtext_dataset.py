@@ -119,7 +119,7 @@ class CounterfactualTextDataset:
         output = {'text':[], 'label':[]}
         split_array = []
         
-        ## 'val': Validation (OOD) set 
+        ## 'val_ood': Validation (OOD) set 
         if(ds.moniker == 'imdb'):
             # Counterfactual by human
             output['text'].append(ds.train.ct_text_amt.values)
@@ -144,9 +144,9 @@ class CounterfactualTextDataset:
         
         # update split array
         num = len(output['label'][-1])
-        split_array.append(split_dict['val']*np.ones(num,dtype=int)) 
+        split_array.append(split_dict['val_ood']*np.ones(num,dtype=int)) 
         
-        ## 'train' ('id_val'): Train (and Validation (ID)) set -- Original  
+        ## 'train' ('val'): Train (and Validation (ID)) set -- Original  
         ds.train['label'] = (ds.train.label.values == 1).astype(int)
         if 'val' in split_dict: 
             n_classes = 2
@@ -179,14 +179,14 @@ class CounterfactualTextDataset:
         num = len(output['label'][-1])
         split_array.append(split_dict['train']*np.ones(num,dtype=int)) 
 
-        ## 'id_test': Test (ID) set -- Original 
+        ## 'test': Test (ID) set -- Original 
         output['text'].append(ds.test.text.values)
         output['label'].append((ds.test.label.values == 1).astype(int))
         # updata split_array
         num = len(output['label'][-1])
         split_array.append(split_dict['test']*np.ones(num,dtype=int))
 
-        ## 'test': Test OOD set -- Counterfactual 
+        ## 'test_ood': Test OOD set -- Counterfactual 
         if ds.moniker == 'imdb':
             # Convert it to binary labels 
             label_cft = (ds.test.ct_label.values == 1).astype(int)   
