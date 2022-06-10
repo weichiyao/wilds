@@ -463,14 +463,23 @@ def main():
             model.features.register_forward_hook(get_activation('features'))
         else:  
             model.avgpool.register_forward_hook(get_activation('avgpool'))
-
-    savedict = {
-        'train':'train', 'id_val':'valid', 'id_test':'test',
-        'val':'valid_ood', 'test':'test_ood'
-    } 
+    
+    if 'id_val' in list(full_dataset.split_dict.keys()) or 'id_test' in list(full_dataset.split_dict.keys()):
+        savedict = {
+            'train':'train', 'id_val':'valid', 'id_test':'test',
+            'val':'valid_ood', 'test':'test_ood'
+        } 
+    else:
+        savedict = {
+            'train':'train', 'val':'valid', 'test':'test',
+            'val_ood':'valid_ood', 'test_ood':'test_ood'
+        } 
+        
  
     for phase in list(full_dataset.split_dict.keys()):
-        file_path = os.path.join(config.log_dir, '{}.npz'.format(savedict[phase]))
+        file_path = os.path.join(config.log_dir, '{}_{}.npz'.format(
+            savedict[phase], config.use_pth
+        ))
         if not os.path.isfile(file_path):
             # Iterate over data.
             results = {'labels': [], 'labels_orc': [], 'logits': [], 'features': []}
