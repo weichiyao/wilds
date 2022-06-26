@@ -166,8 +166,5 @@ def get_dataset(dataset: str, version: Optional[str] = None, unlabeled: bool = F
         return CounterfactualTextDataset(dataset_name=dataset, **dataset_kwargs)
     
     elif 'retrain' in dataset:
-        subname = ''
-        if len(dataset.split('-')) == 2:
-            subname = dataset.split('-')[1] 
         from wilds.datasets.retrain_dataset import RetrainDataset
-        return RetrainDataset(subname=subname, **dataset_kwargs)
+        return RetrainDataset(**dataset_kwargs)
