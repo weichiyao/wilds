@@ -4,7 +4,7 @@ from algorithms.single_model_algorithm import SingleModelAlgorithm
 from models.initializer import initialize_model
 from utils import move_to
 
-class Retrain(nn.Module):
+class RetrainModel(nn.Module):
     def __init__(self, in_features, out_features):
         super().__init__()
         self.classifier = nn.Linear(in_features, out_features) 
@@ -17,7 +17,7 @@ class ERM(SingleModelAlgorithm):
     def __init__(self, config, d_out, grouper, loss,
             metric, n_train_steps, d_in=None):
         if d_in is not None:
-            model = retrain_model(d_in, d_out)
+            model = RetrainModel(d_in, d_out)
         else:
             model = initialize_model(config, d_out)
         # initialize module
