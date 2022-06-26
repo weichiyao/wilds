@@ -164,3 +164,10 @@ def get_dataset(dataset: str, version: Optional[str] = None, unlabeled: bool = F
     elif dataset in ('kindle', 'imdb', 'imdb_sents'):
         from wilds.datasets.counterfactualtext_dataset import Counterfactual, CounterfactualTextDataset
         return CounterfactualTextDataset(dataset_name=dataset, **dataset_kwargs)
+    
+    elif 'retrain' in dataset:
+        subname = ''
+        if len(dataset.split('-')) == 2:
+            subname = dataset.split('-')[1] 
+        from wilds.datasets.retrain_dataset import RetrainDataset
+        return RetrainDataset(subname=subname, **dataset_kwargs)
