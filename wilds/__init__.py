@@ -36,8 +36,11 @@ counterfactual_text_datasets = [
     'imdb_sents'
 ]
 
+retrain_datasets = [
+    'retrain'   
+]
 
-supported_datasets = benchmark_datasets + additional_datasets + noisy_benchmark_datasets + counterfactual_text_datasets
+supported_datasets = benchmark_datasets + additional_datasets + noisy_benchmark_datasets + counterfactual_text_datasets + retrain_datasets
 
 unlabeled_datasets = [
     'amazon',
