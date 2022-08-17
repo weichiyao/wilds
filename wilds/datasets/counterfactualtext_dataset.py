@@ -10,6 +10,7 @@ import torch
 from torch.utils.data import Dataset
 import pickle
 import numpy as np
+import numpy.random as npr
 import torchvision.transforms.functional as F
 from torchvision import transforms 
 import datetime 
@@ -115,7 +116,8 @@ class CounterfactualTextDataset:
         split_array: An array of integers, with split_array[i] representing 
             what split the i-th data point belongs to.
         """
-        
+        rng = npr.RandomState(42)
+       
         output = {'text':[], 'label':[]}
         split_array = []
         
@@ -157,7 +159,7 @@ class CounterfactualTextDataset:
             smpID = []
             for label in uniqueLabel:
                 AllID = ds.train.index[ds.train.label.values == label].tolist()
-                smpID += list(np.random.choice(AllID, int(num_val/n_classes), replace=False))
+                smpID += list(rng.choice(AllID, int(num_val/n_classes), replace=False))
 
             valID = ds.train.index.isin(smpID)
             val_data = ds.train.iloc[valID]
